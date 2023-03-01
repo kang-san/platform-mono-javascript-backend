@@ -1,0 +1,46 @@
+{
+"overrides": [
+  {
+    "files": ["*.js", "*.jsx"],
+    "options": {
+      "parser": "babel-eslint",
+      "arrowParens": "always",
+      "bracketSpacing": true,
+      "jsxBracketSameLine": false,
+      "printWidth": 80,
+      "proseWrap": "preserve",
+      "semi": true,
+      "singleQuote": true,
+      "tabWidth": 2,
+      "trailingComma": "all",
+      "useTabs": false
+    }
+  },
+  {
+    "files": ["*.ts", "*.tsx"],
+    "options": {
+      "parser": "typescript",
+      "arrowParens": "always",
+      "bracketSpacing": true,
+      "jsxBracketSameLine": false,
+      "printWidth": 80,
+      "proseWrap": "preserve",
+      "semi": true,
+      "singleQuote": true,
+      "tabWidth": 2,
+      "trailingComma": "all",
+      "useTabs": false
+    }
+  },
+  {
+    "files": "*.{css,scss,less}",
+    "options": {
+      "singleQuote": false,
+      "semi": true,
+      "useTabs": true,
+      "tabWidth": 2
+    }
+  }
+
+]
+}
