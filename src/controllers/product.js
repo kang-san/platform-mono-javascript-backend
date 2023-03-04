@@ -3,7 +3,6 @@ import User from '../models/user.js';
 
 const createProduct = async (req, res) => {
   try {
-    console.log(req.body);
     const newProduct = await new Product(req.body).save();
     res.json(newProduct);
   } catch (err) {
@@ -131,7 +130,6 @@ const productStar = async (req, res) => {
       },
       { new: true }
     ).exec();
-    console.log("ratingAdded", ratingAdded);
     res.json(ratingAdded);
   } else {
     // if user have already left rating, update it
@@ -142,7 +140,7 @@ const productStar = async (req, res) => {
       { $set: { "ratings.$.star": star } },
       { new: true }
     ).exec();
-    console.log("ratingUpdated", ratingUpdated);
+
     res.json(ratingUpdated);
   }
 };

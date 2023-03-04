@@ -7,6 +7,7 @@ import {
 import {validate} from "../../middlewares/validate.js";
 import * as userDto from "../../dtos/user.js";
 import * as userController from "../../controllers/user.js";
+import {authUser} from "../../dtos/user.js";
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ router.post(
 
 router.post(
     "/user/login",
-    validate(userDto.login),
+    validate(userDto.authUser),
     userController.loginUser
 );
 
@@ -46,21 +47,22 @@ router.delete(
 );
 
 
-
 // update user
 router.put(
     "/user/:id",
     authMiddleware,
     userController.updateUser
 );
+
+// get user's shorts
 router.get(
-    "/user/profile/:id",
+    "/user/shorts/:id",
     authMiddleware,
-    userController.getProfile
+    userController.getShorts
 );
 
 router.put(
-    "/user/profilephoto-upload",
+    "/user/profilephoto-upload/:id",
     authMiddleware,
     photoUpload.single("image"),
     profilePhotoResize,
@@ -69,34 +71,22 @@ router.put(
 
 // password
 router.put(
-  "/user/password",
+  "/user/password/:id",
   authMiddleware,
   userController.updatePassword
+);
+
+// forget password
+router.post(
+  "/user/forget-password",
+  authMiddleware,
+  userController.forgetPassword
 );
 
 router.put(
   "/user/reset-password",
   userController.resetPassword
 );
-
-// router.post(
-//     "/user/forget-password-token",
-//     userController.forgetPasswordToken
-// );
-
-
-// varification
-// router.post(
-//     "/user/generate-verify-email-token",
-//     authMiddleware,
-//     generateVerificationToken
-// );
-// router.put(
-//     "/user/verify-account",
-//     authMiddleware,
-//     accountVerification
-// );
-
 
 
 // follow

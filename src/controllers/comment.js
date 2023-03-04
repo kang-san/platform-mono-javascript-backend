@@ -9,7 +9,6 @@ const createComment = async (req, res) => {
   const user = req.user;
   //2.Get the post Id
   const { postId, description } = req.body;
-  console.log(description);
   try {
     const comment = await Comment.create({
       post: postId,

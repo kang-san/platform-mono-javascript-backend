@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
     lastName: {
       type: String,
       trim: true,
-      requred: [true, "lastName is required"],
+      required: [true, "lastName is required"],
     },
     profilePhoto: {
       type: String,
@@ -144,6 +144,7 @@ userSchema.pre("save", async function (next) {
 
 //match password
 userSchema.methods.isPasswordMatched = async function (enteredPassword) {
+  console.log("enteredPassword : ", enteredPassword, this.password);
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

@@ -1,6 +1,7 @@
 import multer from 'multer';
 import sharp from 'sharp';
 import path from 'path';
+import fs from 'fs';
 //storage
 const multerStorage = multer.memoryStorage();
 
@@ -30,14 +31,24 @@ const photoUpload = multer({
 const profilePhotoResize = async (req, res, next) => {
   //check if there is no file
   if (!req.file) return next();
-  req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
 
-  await sharp(req.file.buffer)
-    .resize(250, 250)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(path.join(`public/images/profile/${req.file.filename}`));
-  next();
+  try {
+    req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+    const dir = "public/images/profile";
+    if(!fs.existsSync(dir)){
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    await sharp(req.file.buffer)
+      .resize(250, 250)
+      .toFormat("jpeg")
+      .jpeg({ quality: 90 })
+      .toFile(path.join(`${dir}/${req.file.filename}`));
+
+    next();
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 };
 
 //Shorts Image Resizing

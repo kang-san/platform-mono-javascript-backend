@@ -9,8 +9,12 @@ export async function authMiddleware(req, res, next) {
     try {
       if (token) {
         const decoded = jwt.verify(token, process.env.JWT_KEY);
-        const user = await User.findById(decoded?.id).select("-password");
-        req.user = user;
+
+        if(decoded.id) {
+          const user = await User.findById(decoded.id).select("-password");
+          req.user = user;
+        }
+
         next();
       }
     } catch (error) {

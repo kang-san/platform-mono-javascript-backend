@@ -1,7 +1,6 @@
 import User from "../models/user.js";
 import generateToken from "../config/generateToken.js";
 import validateMongodbId from "../utils/validateMongodbID.js";
-import sgMail from "@sendgrid/mail";
 import crypto from "crypto";
 import cloudinaryUploadImg from "../utils/cloudinary.js";
 import fs from "fs";
@@ -34,10 +33,10 @@ export async function create(createUserDto) {
  */
 
 export async function auth(authUserDto) {
-    console.log(authUserDto);
-    const user = await User.findOne({email: authUserDto?.email});
-    if (user) {
-        await user.isPasswordMatched(authUserDto?.password);
+  const user = await User.findOne({email: authUserDto?.email});
+  const isPassword = await user.isPasswordMatched(authUserDto?.password);
+
+  if (isPassword) {
         return (
             {
                 _id: user?._id,
@@ -93,16 +92,16 @@ export async function findByIdAndDelete(id) {
 };
 
 /**
- * @desc    Get user profile service
+ * @desc    Get user shorts  service
  * @param id
  * @returns {Promise<void>}
  */
-export async function getProfile(id){
+export async function getShorts(id){
     try {
 
         return User.findById(id).populate("shorts");
     } catch (error) {
-        return new Error("Fail to find user");
+        return new Error("Fail to find user's shorts");
     }
 };
 
@@ -113,11 +112,11 @@ export async function getProfile(id){
  * @returns {Promise<Query<Document<any, any, unknown>, Document<any, any, unknown>, {}, unknown>>}
  */
 export async function findByIdAndUpdate(req) {
-    const { _id } = req?.user;
+    const _id = req?.params.id;
     return User.findByIdAndUpdate(
         _id,
         {
-            firstName: req?.body?.name,
+            firstName: req?.body?.firstName,
             lastName: req?.body?.lastName,
             email: req?.body?.email,
             bio: req?.body?.bio,
@@ -134,9 +133,9 @@ export async function findByIdAndUpdate(req) {
  * @param res
  * @returns {Promise<void>}
  */
-export async function profilePhotoUpload(_id, imgUploaded) {
+export async function profilePhotoUpload(id, imgUploaded) {
     return User.findByIdAndUpdate(
-        _id,
+        id,
         {
             profilePhoto: imgUploaded?.url,
         },
@@ -153,10 +152,58 @@ export async function profilePhotoUpload(_id, imgUploaded) {
  * @returns {Promise<*>}
  */
 export async function updatePassword(id, password) {
+    if(!id) throw new Error("User not found");
     const user = await User.findById(id);
+
+    if(!user) throw new Error("User not found");
     user.password = password;
 
     return  user.save();
+};
+
+/**
+ * @desc    create reset token service
+ * @param user
+ * @returns {Promise<*>}
+ */
+export async function createToken(user) {
+  try{
+    //Create token
+    const token = await user.createPasswordResetToken();
+    await user.save();
+
+    return token;
+  }catch(error) {
+    throw new Error("Fail to create forget password token");
+  }
+}
+
+/**
+ * @desc    password expired check service
+ * @param hashedToken
+ * @returns {Promise<Query<Document<any, any, unknown>, Document<any, any, unknown>, {}, unknown>>}
+ */
+export async function passwordExpireChecker(hashedToken) {
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+  if (!user) throw new Error("Token Expired, try again later");
+
+  return user;
+};
+
+/**
+ * @desc    reset password service
+ * @param user
+ * @param password
+ * @returns {Promise<*>}
+ */
+export async function resetPassword(user, password) {
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  return user.save();
 };
 
 /**
@@ -175,13 +222,12 @@ const generateVerificationToken = async (req, res) => {
         const verificationToken = await user.createAccountVerificationToken();
         //save the user
         await user.save();
-        console.log(verificationToken);
         //build your message
 
         const resetURL = `If you were requested to verify your account, verify now within 10 minutes, otherwise ignore this message <a href="http://localhost:3000/verify-account/${verificationToken}">Click to verify your account</a>`;
         const msg = {
-            to: "ffdfd@gmail.com",
-            from: "twentekghana@gmail.com",
+            to: "junbuck@gmail.com",
+            from: "junbuck01@gmail.com",
             subject: "Verify your account",
             html: resetURL,
         };
@@ -217,65 +263,7 @@ const accountVerification = async (req, res) => {
     res.json(userFound);
 };
 
-/**
- * @desc    password expired check service
- * @param hashedToken
- * @returns {Promise<Query<Document<any, any, unknown>, Document<any, any, unknown>, {}, unknown>>}
- */
-export async function passwordExpireChecker(hashedToken) {
-    const user = await User.findOne({
-        passwordResetToken: hashedToken,
-        // passwordResetExpires: { $gt: Date.now() },
-    });
-    if (!user) throw new Error("Token Expired, try again later");
 
-    return user;
-};
-
-export async function resetPassword(user, password) {
-    user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    return user.save();
-};
-
-
-/**
- * @desc    forgot password token service
- * @param req
- * @param res
- * @returns {Promise<void>}
- */
-const forgetPasswordToken = async (req, res) => {
-    //find the user by email
-    const { email } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) throw new Error("User Not Found");
-
-    try {
-        //Create token
-        const token = await user.createPasswordResetToken();
-        console.log(token);
-        await user.save();
-
-        //build your message
-        const resetURL = `If you were requested to reset your password, reset now within 10 minutes, otherwise ignore this message <a href="http://localhost:3000/reset-password/${token}">Click to Reset</a>`;
-        const msg = {
-            to: email,
-            from: "twentekghana@gmail.com",
-            subject: "Reset Password",
-            html: resetURL,
-        };
-
-        await sgMail.send(msg);
-        res.json({
-            msg: `A verification message is successfully sent to ${user?.email}. Reset now within 10 minutes, ${resetURL}`,
-        });
-    } catch (error) {
-        res.json(error);
-    }
-};
 
 
 /**
