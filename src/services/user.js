@@ -19,7 +19,7 @@ export async function findOne(req) {
     return userExists;
 };
 
-export async function create(createUserDto) {
+export async function createUser(createUserDto) {
     //Check if user Exist
     const user = await User.create(createUserDto);
 

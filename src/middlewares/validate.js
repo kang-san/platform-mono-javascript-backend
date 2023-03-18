@@ -8,8 +8,7 @@ export function validate(schema) {
     return (req, res, next) => {
         const validationSchema = pick(schema, ['params', 'query', 'body']);
         const object = pick(req, Object.keys(validationSchema));
-        const {value, error} = Joi.compile(validationSchema)
-            .validate(object);
+        const {value, error} = Joi.compile(validationSchema).validate(object);
 
         if (error) {
             const errorMessage = error.details

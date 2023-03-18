@@ -174,5 +174,26 @@ userSchema.methods.createPasswordResetToken = async function () {
 
 //Compile schema into model
 const User = mongoose.model("User", userSchema);
-
 export default User;
+
+export const createUser = async (req, res) => {
+  try{
+    const { firstName, lastName, email, password } = req.body;
+    const user = await User.create({ firstName, lastName, email, password });
+    const token = await user.generateAuthToken();
+
+    res.status(201).json({ user, token });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json("Could not create user");
+  }
+};
+
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};

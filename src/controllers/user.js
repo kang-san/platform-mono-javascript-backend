@@ -22,7 +22,7 @@ export async function userRegister(req, res, next) {
     const userExists = await userService.findOne(req);
 
     if (userExists) throw new Error("User already exists");
-    const user = await userService.create(req.body);
+    const user = await userService.createUser(req.body);
 
     return res.status(STATUS_CODES.OK).json(user);
   } catch (error) {
